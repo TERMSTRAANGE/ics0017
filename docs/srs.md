@@ -16,27 +16,31 @@ For program to compile, CMake and any C++ compiler supporting C++11 features is 
 
 # 2. Features / Functions to be Implemented
 ### User stories
-As an user of this program, I would like to be able to play blackjack through this application.
+As a user of this program, I would like to be able to play blackjack through this application.
 For this, the application must allow me to do the following:
+- Deposit initial amount of funds
 - Place bets
-- Make game moves(Hit or Stand)
 - Save game data from previous sessions
 
 The program must also autonomously simulate dealer's behavior such as:
-- Shuffling the cards
+- Shuffling the cards at the start of each round
 - Dealing the cards
-- Check the win conditions
+- Determining win conditions
+- Calculating correct payouts
 
 ## 2.1. Acceptance Criteria
-The program must accurately simulate the game of blackjack, following the basic rules of the game. This means that the program must provide correct results to game moves. When saving is implemented, data must be properly saved and loaded.
+The program must accurately simulate the game of blackjack, following the basic rules of the game. This means that the program must provide correct results to game moves and payout calculations. The game loop must support multiple rounds and handle user input for replay decisions. When saving is implemented, data must be properly saved and loaded.
 
 ## 2.2. Implementation Requirements
-For shuffling the card deck, Durstenfeld's version of Fisher-Yatis shuffling algorithm should be used. For randomization, which is required by aforementioned algorithm, C++ *random* library will be utilized.
+For shuffling the card deck, Durstenfeld's version of Fisher-Yates shuffling algorithm should be used. For randomization, which is required by aforementioned algorithm, C++ *random* library will be utilized. The deck must be reset and reshuffled at the beginning of each round. Logic and presentation layers should be separate for improved maintainability.
 
 # 3. SW Non-Functional Requirements
 
 ## 3.1. Input Validation
-Input will be limited to integers, so any integers out of choice range or non-integers will be removed as a choice with simple if statement. If more options are going to be added, if statements will be switched to switch cases.
+The program must:
+- Reject invalid input type(int instead of string and vice versa)
+- Provide an error message
+- Allow to retry user input
 
 ## 3.2. Architectural Constraints
 Logic, data and presentation will be handled in separate functions to avoid problems with maintainability.
@@ -61,7 +65,8 @@ Code split in functions and classes according to responsibility, easier to track
 
 | Responsibility | Collaboration | 
 | --- | --- |
-| Stores and manages all playing cards | Contains an array of *Card* elements and is a part of *Game* class |
+| Stores and manages all playing cards; handles shuffling and dealing | Contains an array of *Card* elements and is a part of *Game* class |
+| Resets deck size for fresh rounds | Accessed by *Game* class at round start |
 
 ### *Player* class
 | Responsibility | Collaboration | 
@@ -76,56 +81,6 @@ Code split in functions and classes according to responsibility, easier to track
 ### *Game* class
 | Responsibility | Collaboration | 
 | --- | --- |
-| Manages the game logic | Includes *Player*, *Dealer*, *Card_deck* classes |
-
-## 4.2. Conceptual UML Diagram (Entities & Relationships)
-
-```mermaid
-     classDiagram
-        Game <|-- Card_deck
-        Game <|-- Player
-        Game <|--Dealer
-        Card_deck <|-- Card
-        class Card_deck{
-            -Card deck[52]
-            -int deck_size = 52
-            print()
-            shuffle()
-            deal()
-        }
-        class Card{
-            +int value
-            +int suite
-        }
-        class Game{
-            -Card_deck deck
-            -Player player
-            -Dealer dealer
-            +play()
-            -display()
-            -deal_initial_cards()
-            -player_turn()
-            -dealer_turn()
-            -check_win()
-            
-        }
-        class Player{
-            -MAX_HAND = 11
-            -Card hand[MAX_HAND]
-            -int hand_size
-            +receive_card()
-            +hand_sum()
-            +print_hand()
-            +get_hand_size()
-        }
-        class Dealer{
-            -MAX_HAND = 11
-            -Card hand[MAX_HAND]
-            -int hand_size
-            +receive_card()
-            +hand_sum()
-            +print_hand()
-            +get_hand_size()
-            +should_hit()
-        }
-```
+| Manages overall game flow and main game loop | Contains *Player*, *Dealer*, *Card_deck* classes |
+| Separates game logic from presentation/UI | Calls logic methods and display methods appropriately |
+| Handles round management and replay logic | Manages state between rounds |

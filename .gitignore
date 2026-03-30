@@ -69,3 +69,4 @@ Testing/
 .cache/
 
 #extra
+.vscode

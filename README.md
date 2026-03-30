@@ -22,8 +22,8 @@ cmake --build build
 Executable will be found in the `build/` subdirectory under the name of `ics0017`(or `ics0017.exe` on Windows environments)
 
 ## TODO
-- [ ] Funds
-- [ ] Dynamic Memory
+- [x] Funds
+- [~] Dynamic Memory
 - [ ] Saving
 - [ ] Operator Overloading
     - [ ] Move Operator
