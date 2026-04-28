@@ -11,6 +11,8 @@ add_executable(${PROJECT_NAME}
     src/player.cpp
     src/game.cpp
     src/utils.cpp
+    src/exceptions.cpp
+    src/ui.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

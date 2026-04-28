@@ -26,20 +26,11 @@ private:
     Player player;
     Dealer dealer;
     int current_bet = 0;
-
-    //UI
-    void play_round();
-    bool ask_play_again();
-    bool has_funds_to_play();
-    void display() const;
-    void display_round_start() const;
-    void display_round_result() const;
     
-    //Init
+    void play_round();
+    bool has_funds_to_play();
     void init_funds();
     int place_bet();
-
-    //Logic
     void deal_initial_cards();
     bool check_bj();
     bool player_turn();

@@ -1,6 +1,9 @@
 #include <player.h>
+#include <exceptions.h>
 #include <iostream>
 #include <limits>
+#include <exception>
+#include <string>
 
 void Player::receive_card(Card card) {
     if (hand_size < MAX_HAND) {
@@ -48,12 +51,10 @@ int Player::get_hand_size() const {
 
 int Player::set_funds(int money) {
     if (money <= 0) {
-        return 0;
+        throw InvalidFundsException(money);
     }
-    else {
-        funds = money;
-        return 1;
-    }
+    funds = money;
+    return 1;
 }
 
 int Player::get_funds() const {
@@ -62,7 +63,7 @@ int Player::get_funds() const {
 
 int Player::place_bet(int bet_amount) {
     if (bet_amount <= 0 || bet_amount > funds) {
-        return 0;
+        throw InvalidBetException(bet_amount, funds);
     }
     funds -= bet_amount;
     return 1;

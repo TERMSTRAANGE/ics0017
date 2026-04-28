@@ -1,7 +1,6 @@
 #include <game.h>
-#include <utils.h>
-#include <iostream>
-#include <limits>
+#include <ui.h>
+#include <exceptions.h>
 
 Game::Game() {
     deck.shuffle();
@@ -12,14 +11,13 @@ void Game::run() {
     
     while (has_funds_to_play()) {
         play_round();
-        if (!ask_play_again()) {
+        if (!UI::ask_play_again()) {
             break;
         }
     }
     
-    clear_screen();
-    std::cout << "Final funds: " << player.get_funds() << "$." << std::endl;
-    std::cout << "Thanks for playing!" << std::endl;
+    UI::display_final_funds(player.get_funds());
+    UI::display_thanks();
 }
 
 void Game::play_round() {
@@ -34,7 +32,8 @@ void Game::play_round() {
     deck.reset();
     deck.shuffle();
     deal_initial_cards();
-    display_round_start();
+    UI::display_game_state(player, dealer, current_bet);
+    UI::display_round_separator();
 
     if (check_bj()) {
         return;
@@ -45,98 +44,41 @@ void Game::play_round() {
     }
     
     dealer_turn();
-    display_round_result();
+    UI::display_game_state(player, dealer, current_bet);
     
     GameOutcome outcome = determine_outcome();
     apply_payout(outcome);
 }
 
-bool Game::ask_play_again() {
-    while (true) {
-        std::string response;
-        std::cout << std::endl << "Play another round? (yes/no): ";
-        std::cin >> response;
-        
-        if (response == "yes" || response == "y") {
-            return true;
-        } else if (response == "no" || response == "n") {
-            return false;
-        } else {
-            std::cout << "Please enter 'yes' or 'no'." << std::endl;
-        }
-    }
-}
-
 bool Game::has_funds_to_play() {
     if (player.get_funds() <= 0) {
-        clear_screen();
-        std::cout << "No funds remaining. Game over!" << std::endl;
+        UI::display_game_over(player.get_funds());
         return false;
     }
     return true;
 }
 
-void Game::display() const {
-    clear_screen();
-    std::cout << "Funds: " << player.get_funds() << "$ | Bet: " << current_bet << "$." << std::endl;
-    std::cout << std::endl;
-    std::cout << "Dealer: ";
-    dealer.print_hand();
-    std::cout << std::endl;
-    std::cout << "Player: ";
-    player.print_hand();
-    std::cout << std::endl;
-}
-
-void Game::display_round_start() const {
-    display();
-    std::cout << std::endl;
-}
-
-void Game::display_round_result() const {
-    display();
-}
-
-void Game::init_funds(){
-    while (true){
-        int funds;
-        std::cout << "Please enter the base funds: ";
-        if (!(std::cin >> funds)){
-                std::cout << "Invalid input, enter a number." << std::endl;
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-                continue;
-            }
-        if (player.set_funds(funds) == 1) {
-            std::cout << "Starting with " << player.get_funds() << "$." << std::endl;
-            break;
-        }
-        else {
-            std::cout << "Enter an appropriate amount." << std::endl;
-        }
+void Game::init_funds() {
+    try {
+        int funds = UI::get_initial_funds();
+        player.set_funds(funds);
+    }
+    catch (const InvalidFundsException& e) {
+        UI::display_error(e.what());
+        init_funds();
     }
 }
 
 int Game::place_bet() {
-    while (true) {
-        int bet;
-        std::cout << "Current funds: " << player.get_funds() << "$." << std::endl;
-        std::cout << "Place your bet: ";
-        
-        if (!(std::cin >> bet)){
-            std::cout << "Invalid input, enter a number." << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            continue;
-        }
-        
-        if (player.place_bet(bet) == 1) {
-            current_bet = bet;
-            return bet;
-        }
-        else {
-            std::cout << "Invalid bet amount. Must be between 1$ and " << (player.get_funds() + bet) << "$." << std::endl;
-        }
+    try {
+        int bet = UI::get_bet(player.get_funds());
+        player.place_bet(bet);
+        current_bet = bet;
+        return bet;
+    }
+    catch (const InvalidBetException& e) {
+        UI::display_error(e.what());
+        return place_bet();
     }
 }
 
@@ -158,15 +100,15 @@ bool Game::check_bj() {
     GameOutcome outcome;
     if (player_check && dealer_check) {
         outcome = GameOutcome::BOTH_BLACKJACK;
-        std::cout << "Both have Blackjack! Push." << std::endl;
+        UI::display_both_blackjack();
     }
     else if (player_check) {
         outcome = GameOutcome::PLAYER_BLACKJACK;
-        std::cout << "Blackjack! Player wins " << calculate_payout(outcome) << "$!" << std::endl;
+        UI::display_player_blackjack(calculate_payout(outcome));
     }
     else {
         outcome = GameOutcome::DEALER_BLACKJACK;
-        std::cout << "Dealer has Blackjack! Dealer wins." << std::endl;
+        UI::display_dealer_blackjack();
     }
     
     apply_payout(outcome);
@@ -175,31 +117,18 @@ bool Game::check_bj() {
 
 bool Game::player_turn() {
     while (true) {
-        int choice;
-        std::cout << "1) Hit  2) Stand: ";
-
-        if (!(std::cin >> choice)){
-            std::cout << "Invalid input, enter a number." << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-            continue;
-        }
+        int choice = UI::get_player_action();
 
         if (choice == 1) {
             player.receive_card(deck.deal());
-            display();
+            UI::display_game_state(player, dealer, current_bet);
             if (player.is_bust()) {
-                std::cout << "Player busts! Dealer wins." << std::endl;
+                UI::display_player_bust();
                 return true;
             }
         }
-
-        else if (choice == 2) {
-            return false;
-        }
-
         else {
-            std::cout << "Invalid number, enter 1 or 2." << std::endl;
+            return false;
         }
     }
 }
@@ -262,21 +191,22 @@ void Game::apply_payout(GameOutcome outcome) {
         case GameOutcome::PLAYER_BLACKJACK:
         case GameOutcome::PLAYER_WIN:
         case GameOutcome::DEALER_BUST:
-            std::cout << "Player wins " << payout << "$!" << std::endl;
+            UI::display_player_wins(payout);
             break;
         case GameOutcome::BOTH_BLACKJACK:
         case GameOutcome::PUSH:
-            std::cout << "Push (tie). You get your bet back." << std::endl;
+            UI::display_push();
             break;
         case GameOutcome::DEALER_BLACKJACK:
         case GameOutcome::PLAYER_BUST:
         case GameOutcome::DEALER_WIN:
-            std::cout << "Dealer wins." << std::endl;
+            UI::display_dealer_wins();
             break;
         default:
             break;
     }
     
     player.add_win(payout);
-    std::cout << "Funds remaining: " << player.get_funds() << "$." << std::endl;
+    UI::display_message("Funds remaining: " + std::to_string(player.get_funds()) + "$.");
 }
+

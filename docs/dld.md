@@ -266,3 +266,25 @@ Algorithm: Execute one complete blackjack round
 |----------|-----------|-----------|
 | Inheritance: Dealer < Player | Reuse hand/funds logic | Dealer doesn't use funds field, minor waste of memory |
 | Integer funds only | Avoid floating-point bugs | Cannot represent fractional cents |
+
+
+## 7. Validation Rules
+| Method | Preconditions | Postconditions | Validation Level | Explanation |
+| --- | --- | --- | --- | --- |
+| UI::get_initial_funds, UI::get_bet | Stream input is valid | Integer is returned | UI | Verifies input is `int` |
+| Player::set_funds | Amount parameter provided | Funds stored; exception thrown if ≤ 0 | Logic | Enforces positive funds constraint |
+| Player::place_bet | Bet amount and current funds | Bet deducted from funds; exception if invalid | Logic | Ensures bet ≤ available funds before deduction |
+| UI::get_player_action | Player's action needed | Returns 1 (Hit) or 2 (Stand) | UI | Validates choice is either one or two with retry loop |
+| UI::ask_play_again | Game round complete | Returns true/false for "yes"/"no"/"y"/"n" | UI | Accepts case-sensitive variants; retry on invalid |
+
+## 8. Behavioral Models
+![alt-text](behavioral-models.jpg)
+
+## 9. Error and Exception Policy
+| Exception Type | Thrown By | Caught At | User Message | Default Action |
+| --- | --- | --- | --- | --- |
+| InvalidInput | UI number input | UI | "Please enter a valid number." | Retry input |
+| InvalidFunds | Player::set_funds | Logic | "Invalid funds amount. Your input: [X]. Please enter a positive amount." | Retry init_funds() |
+| InvalidBet | Player::place_bet | Logic | "Invalid bet amount. Your input: [X]. Must be between 1\$ and [MAX]\$." | Retry place_bet() |
+| InvalidChoice | UI::get_player_action | UI | "Invalid choice. Your input: [X]. Please enter 1 (Hit) or 2 (Stand)." | Retry action input |
+| InvalidResponse | UI::ask_play_again | UI | "Invalid response '[X]'. Please enter 'yes' or 'no'." | Retry play again prompt |
