@@ -1,4 +1,4 @@
-#include "exceptions.h"
+#include <exceptions.h>
 
 InvalidInputException::InvalidInputException(const std::string& context) {
     message = "Invalid input. " + context;
@@ -41,5 +41,21 @@ InvalidResponseException::InvalidResponseException(const std::string& response) 
 }
 
 const char* InvalidResponseException::what() const noexcept {
+    return message.c_str();
+}
+
+FileOpenError::FileOpenError() {
+    message = "Unable to open save file.";
+}
+
+const char* FileOpenError::what() const noexcept {
+    return message.c_str();
+}
+
+InvalidFileFormat::InvalidFileFormat() {
+    message = "Encountered invalid data in the save file.";
+}
+
+const char* InvalidFileFormat::what() const noexcept {
     return message.c_str();
 }

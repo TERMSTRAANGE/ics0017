@@ -1,8 +1,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "deck.h"
-#include "player.h"
+#include <deck.h>
+#include <player.h>
+#include <persistence.h>
 
 class Game {
 public:
@@ -26,10 +27,12 @@ private:
     Player player;
     Dealer dealer;
     int current_bet = 0;
+    static const std::string FUNDS_FILE;
     
     void play_round();
     bool has_funds_to_play();
     void init_funds();
+    void save_funds();
     int place_bet();
     void deal_initial_cards();
     bool check_bj();

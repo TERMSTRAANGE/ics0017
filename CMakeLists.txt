@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}
     src/utils.cpp
     src/exceptions.cpp
     src/ui.cpp
+    src/persistence.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)

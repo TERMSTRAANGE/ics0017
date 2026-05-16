@@ -1,7 +1,7 @@
 #ifndef DECK_H
 #define DECK_H
 
-#include "card.h"
+#include <card.h>
 
 class Card_deck {
 public:

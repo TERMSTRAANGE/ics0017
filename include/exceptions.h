@@ -49,4 +49,20 @@ public:
     const char* what() const noexcept override;
 };
 
+class FileOpenError : public std::exception {
+private:
+    std::string message;
+public:
+    FileOpenError();
+    const char* what() const noexcept override;
+};
+
+class InvalidFileFormat : public std::exception {
+private:
+    std::string message;
+public:
+    InvalidFileFormat();
+    const char* what() const noexcept override;
+};
+
 #endif

@@ -288,3 +288,5 @@ Algorithm: Execute one complete blackjack round
 | InvalidBet | Player::place_bet | Logic | "Invalid bet amount. Your input: [X]. Must be between 1\$ and [MAX]\$." | Retry place_bet() |
 | InvalidChoice | UI::get_player_action | UI | "Invalid choice. Your input: [X]. Please enter 1 (Hit) or 2 (Stand)." | Retry action input |
 | InvalidResponse | UI::ask_play_again | UI | "Invalid response '[X]'. Please enter 'yes' or 'no'." | Retry play again prompt |
+| FileOpenError | Persistence::save_funds / Persistence::load_funds | Game::run() | "Unable to open save file." | Use fallback funds or retry operation |
+| InvalidFileFormat | Persistence::load_funds | Game::run() | "Encountered invalid data in the save file." | Trigger init_funds() to set new starting funds |

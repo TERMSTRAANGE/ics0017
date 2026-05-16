@@ -1,6 +1,9 @@
 #include <game.h>
 #include <ui.h>
 #include <exceptions.h>
+#include <persistence.h>
+
+const std::string Game::FUNDS_FILE = "player_funds.txt";
 
 Game::Game() {
     deck.shuffle();
@@ -16,6 +19,7 @@ void Game::run() {
         }
     }
     
+    save_funds();
     UI::display_final_funds(player.get_funds());
     UI::display_thanks();
 }
@@ -48,6 +52,7 @@ void Game::play_round() {
     
     GameOutcome outcome = determine_outcome();
     apply_payout(outcome);
+    save_funds();
 }
 
 bool Game::has_funds_to_play() {
@@ -60,12 +65,40 @@ bool Game::has_funds_to_play() {
 
 void Game::init_funds() {
     try {
-        int funds = UI::get_initial_funds();
+        int funds = Persistence::load_funds(FUNDS_FILE);
         player.set_funds(funds);
+        UI::display_message("Loaded previous funds: " + std::to_string(funds) + "$");
+        return;
     }
-    catch (const InvalidFundsException& e) {
-        UI::display_error(e.what());
-        init_funds();
+    catch (const FileOpenError&) {
+        UI::display_message("No previous game data found. Starting fresh.");
+    }
+    catch (const InvalidFileFormat&) {
+        UI::display_message("Game data corrupted. Starting fresh.");
+    }
+    catch (const InvalidFundsException&) {
+        UI::display_message("Saved funds invalid. Starting fresh.");
+    }
+    
+    bool funds_set = false;
+    while (!funds_set) {
+        try {
+            int funds = UI::get_initial_funds();
+            player.set_funds(funds);
+            funds_set = true;
+        }
+        catch (const InvalidFundsException& e) {
+            UI::display_error(e.what());
+        }
+    }
+}
+
+void Game::save_funds() {
+    try {
+        Persistence::save_funds(player.get_funds(), FUNDS_FILE);
+    }
+    catch (const FileOpenError& e) {
+        UI::display_error("Warning: Could not save funds - " + std::string(e.what()));
     }
 }
 
